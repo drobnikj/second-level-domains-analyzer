@@ -32,7 +32,7 @@ Apify.main(async () => {
                 try {
                     const url = new URL(href);
                     if (url.hostname.match(/\.cz$/) && url.hostname.split('.').length === 2) {
-                        const addToQueue = await requestQueue.addRequest(new Apify.Request({ url: `https://${url.hostname}`}));
+                        const addToQueue = await requestQueue.addRequest(new Apify.Request({ url: `http://${url.hostname}`}));
                         if (!addToQueue.wasAlreadyPresent && !addToQueue.wasAlreadyHandled) foundPages.push(url.hostname);
                     }
                 } catch(err) {
