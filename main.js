@@ -1,35 +1,62 @@
 const Apify = require('apify');
+const { URL } = require('url');
 
 Apify.main(async () => {
     // Get queue and enqueue first url.
     const requestQueue = await Apify.openRequestQueue();
-    await requestQueue.addRequest(new Apify.Request({ url: 'https://news.ycombinator.com/' }));
+    const requestList = new Apify.RequestList({
+        sources: [
+            { requestsFromUrl: 'https://api.apify.com/v2/key-value-stores/MgbE5ENuLSY5HMAYv/records/OUTPUT?disableRedirect=true' },
+            { requestsFromUrl: 'https://api.apify.com/v2/key-value-stores/X4utrEmBj74eJHDQZ/records/OUTPUT?disableRedirect=true' },
+        ],
+        persistStateKey: 'url-list',
+    });
+
+    await requestList.initialize();
 
     // Create crawler.
     const crawler = new Apify.PuppeteerCrawler({
+        requestList,
         requestQueue,
-        disableProxy: true,
+        launchPuppeteerOptions: {apifyProxyGroups: ['SHADER']},
 
-        // This page is executed for each request.
-        // If request failes then it's retried 3 times.
-        // Parameter page is Puppeteers page object with loaded page.
+
         handlePageFunction: async ({ page, request }) => {
             const title = await page.title();
-            const posts = await page.$$('.athing');
+            const url = new URL(page.url());
+            const foundPages = [];
 
-            console.log(`Page ${request.url} succeeded and it has ${posts.length} posts.`);
+            const hrefs = await page.$$eval('a[href]', els => els.map(el => el.href));
 
-            // Save data.
+            for (const href of hrefs) {
+                try {
+                    const url = new URL(href);
+                    if (url.hostname.match(/\.cz$/) && url.hostname.split('.').length === 2) {
+                        const addToQueue = await requestQueue.addRequest(new Apify.Request({ url: `https://${url.hostname}`}));
+                        if (!addToQueue.wasAlreadyPresent && !addToQueue.wasAlreadyHandled) foundPages.push(url.hostname);
+                    }
+                } catch(err) {
+                    // Show must go on
+                }
+            }
+
             await Apify.pushData({
-                url: request.url,
+                url: page.url(),
+                hostname: url.hostname,
+                protocol: url.protocol,
                 title,
-                postsCount: posts.length,
+                foundPages,
             });
         },
 
         // If request failed 4 times then this function is executed.
         handleFailedRequestFunction: async ({ request }) => {
             console.log(`Request ${request.url} failed 4 times`);
+            await Apify.pushData({
+                url: request.url,
+                isFailed: true,
+                errors: request.errorMessages
+            });
         },
     });
 
