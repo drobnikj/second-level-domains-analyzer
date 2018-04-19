@@ -1,25 +1,16 @@
-# This is a sample build configuration for JavaScript.
-# Check our guides at https://confluence.atlassian.com/x/14UWN for more examples.
-# Only use spaces to indent your .yml configuration.
-# -----
-# You can specify a custom docker image from Docker Hub as your build environment.
-image: node:8.4.0
-
+image: node:5.11.0
 pipelines:
   default:
     - step:
-        caches:
-          - node
-        script: # Modify the commands below to build your repository.
-          - npm install
-          - npm install apify-cli -g
-          - apify login --token $APIFY_TOKEN
+        script:
+          - echo "This script runs on all branches that don't have any specific pipeline assigned in 'branches'."
   branches:
-        master:
-          - step:
-              script:
-                - apify push --build-tag latest
-        develop:
-          - step:
-              script:
-                - apify push --build-tag beta
+    master:
+      - step:
+          script:
+            - echo "This script runs only on commit to the master branch."
+    feature/*:
+      - step:
+          image: java:openjdk-9 # This step uses its own image
+          script:
+            - echo "This script runs only on commit to branches with names that match the feature/* pattern."
