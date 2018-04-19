@@ -14,7 +14,7 @@ pipelines:
           - npm install
           - npm install apify-cli -g
           - apify login --token $APIFY_TOKEN
-    branches:
+  branches:
         master:
           - step:
               script:
@@ -23,4 +23,3 @@ pipelines:
           - step:
               script:
                 - apify push --build-tag beta
-
