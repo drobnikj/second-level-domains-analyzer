@@ -14,39 +14,55 @@ Apify.main(async () => {
 
     await requestList.initialize();
 
+    const addedDomains = {};
+
     // Create crawler.
     const crawler = new Apify.PuppeteerCrawler({
         requestList,
         requestQueue,
-        launchPuppeteerOptions: {apifyProxyGroups: ['SHADER']},
+        launchPuppeteerOptions: { apifyProxyGroups: ['SHADER'] },
 
 
         handlePageFunction: async ({ page, request }) => {
+            console.log(`Open ${request.url}`);
             const title = await page.title();
             const url = new URL(page.url());
-            const foundPages = [];
+            const foundDomains = [];
+            const domains = {};
 
             const hrefs = await page.$$eval('a[href]', els => els.map(el => el.href));
 
-            for (const href of hrefs) {
+            // deduplicate hosts
+            hrefs.map(href => {
                 try {
                     const url = new URL(href);
-                    if (url.hostname.match(/\.cz$/) && url.hostname.split('.').length === 2) {
-                        const addToQueue = await requestQueue.addRequest(new Apify.Request({ url: `http://${url.hostname}`}));
-                        if (!addToQueue.wasAlreadyPresent && !addToQueue.wasAlreadyHandled) foundPages.push(url.hostname);
+                    let spitedHostname = url.hostname.split('.');
+                    if (spitedHostname.length >= 3) spitedHostname = spitedHostname.slice(-2); // omit 3rd and more domain
+                    if (spitedHostname.slice(-1)[0] === 'cz') {
+                        const domain = spitedHostname.join('.');
+                        if (!addedDomains[domain]) domains[domain] = 'toAdd'
                     }
-                } catch(err) {
-                    // Show must go on
+                } catch (err) {
+                    // maybe bad href
                 }
+            });
+
+            for (const domain of Object.keys(domains)) {
+                const addToQueue = await requestQueue.addRequest(new Apify.Request({ url: `http://${domain}` }));
+                if (!addToQueue.wasAlreadyPresent && !addToQueue.wasAlreadyHandled) foundDomains.push(domain);
+                addedDomains[domain] = 'added';
             }
+            if (foundDomains.length) console.log(`On ${request.url} added ${foundDomains.join(', ')}`);
 
             await Apify.pushData({
                 url: page.url(),
-                hostname: url.hostname,
+                domain: url.hostname.split('.').slice(-2).join('.'),
                 protocol: url.protocol,
                 title,
-                foundPages,
+                foundDomains,
             });
+
+            console.log(`Finish ${request.url}`);
         },
 
         // If request failed 4 times then this function is executed.
