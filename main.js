@@ -20,6 +20,7 @@ Apify.main(async () => {
     const crawler = new Apify.PuppeteerCrawler({
         requestList,
         requestQueue,
+        minConcurrency: 20,
         launchPuppeteerOptions: { apifyProxyGroups: ['SHADER'] },
 
 
