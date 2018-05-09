@@ -6,8 +6,7 @@ Apify.main(async () => {
     const requestQueue = await Apify.openRequestQueue();
     const requestList = new Apify.RequestList({
         sources: [
-            { requestsFromUrl: 'https://api.apify.com/v2/key-value-stores/MgbE5ENuLSY5HMAYv/records/OUTPUT?disableRedirect=true' },
-            { requestsFromUrl: 'https://api.apify.com/v2/key-value-stores/X4utrEmBj74eJHDQZ/records/OUTPUT?disableRedirect=true' },
+            { requestsFromUrl: 'https://api.apify.com/v2/key-value-stores/hn5YoQaAAYgjiDrjN/records/OUTPUT?disableRedirect=true' },
         ],
         persistStateKey: 'url-list',
     });
