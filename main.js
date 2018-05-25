@@ -3,6 +3,7 @@ const { URL } = require('url');
 const Wappalyzer = require('wappalyzer/wappalyzer');
 const appsJson = require('wappalyzer/apps.json');
 const dns = require('dns');
+const microdataParser = require('microdata-node');
 const { promisify } = require('util');
 
 // const MAX_PAGE_PER_DOMAIN = 3;
@@ -168,6 +169,25 @@ const basicSEOAnalysis = async (page) => {
     return analysis;
 };
 
+const jsonLdLookup = async (page) => {
+    let isJsonLd = false;
+    let jsonLdData = {};
+    if (await page.$('script[type="application/ld+json"]')) {
+        isJsonLd = true;
+        jsonLdData = await page.$eval('script[type="application/ld+json"]', (el) => JSON.parse(el.innerText));
+    }
+    return { isJsonLd, jsonLdData }
+};
+
+const microdataLookup = async (page) => {
+    let isMicrodata = false;
+    const pageHtml = await page.evaluate(() => document.documentElement.outerHTML);
+    const microdata = microdataParser.toJsonld(pageHtml);
+    if (microdata.length) isMicrodata = true;
+
+    return { isMicrodata, microdata };
+};
+
 Apify.main(async () => {
     // Get queue and enqueue first url.
     const requestQueue = await Apify.openRequestQueue();
@@ -179,6 +199,9 @@ Apify.main(async () => {
     // });
     const requestList = new Apify.RequestList({
         sources: [
+            { url: 'http://www.bandivamos.cz/panska-kravata-bandi-model-lux-337' },
+            { url: 'https://www.alza.cz' },
+            { url: 'https://www.massimodutti.com/cz/boty-%26-dopl%C5%88ky/obuv/prohl%C3%A9dnout-v%C5%A1e---od-%C5%99ezb%C3%A1%C5%99stv%C3%AD-35/ko%C5%BEen%C3%A9-sand%C3%A1ly-zelen%C3%A9-c1475029p8194024.html' },
             { url: 'http://www.cwordpress.cz/' },
         ],
         persistStateKey: 'url-list',
@@ -257,6 +280,10 @@ Apify.main(async () => {
             // Basic SEO analysis
             const basicSEO = await basicSEOAnalysis(page);
 
+            // JSON-LD and Microdata lookup
+            const { isJsonLd, jsonLdData } = await jsonLdLookup(page);
+            const { isMicrodata, microdata } = await microdataLookup(page);
+
             await Apify.pushData({
                 url: page.url(),
                 domain: homePageUrl.hostname.split('.').slice(-2).join('.'),
@@ -269,6 +296,10 @@ Apify.main(async () => {
                 isIPv6Support,
                 isSSLRedirect: (homePageUrl.protocol === 'https:'),
                 basicSEO,
+                isJsonLd,
+                jsonLdData,
+                isMicrodata,
+                microdata,
             });
 
             console.log(`Finish analysis for ${request.url}`);
