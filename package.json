@@ -5,6 +5,7 @@
 	"main": "main.js",
 	"dependencies": {
 		"apify": "^0.5.34",
+		"microdata-node": "^1.0.0",
 		"wappalyzer": "^5.4.15"
 	},
 	"devDependencies": {},
