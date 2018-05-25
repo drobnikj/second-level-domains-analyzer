@@ -259,10 +259,10 @@ Apify.main(async () => {
                 if (!addToQueue.wasAlreadyPresent && !addToQueue.wasAlreadyHandled) foundDomains.push(domain);
                 addedDomains[domain] = 'added';
             }
-            if (foundDomains.length) console.log(`${request.url} - Found domains ${foundDomains.join(', ')}`);
+            // if (foundDomains.length) console.log(`${request.url} - Found domains ${foundDomains.join(', ')}`);
 
             const foundNextLinks = Object.keys(nextLinks);
-            if(foundNextLinks.length) console.log(`${request.url} - Found next links ${foundNextLinks.join(', ')}`);
+            // if(foundNextLinks.length) console.log(`${request.url} - Found next links ${foundNextLinks.join(', ')}`);
 
             // Page technologies analysis
             const technologyLookupResults = await pageTechnologyAnalyzer(gotoPageResponse, page);
