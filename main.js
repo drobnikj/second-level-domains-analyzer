@@ -111,11 +111,6 @@ const basicSEOAnalysis = async (page) => {
             maxLinksCount: 3000,
             maxWordsCount: 350,
         };
-        // -- Google Analytics
-        // check for GA Object (e.g crawler can not find function(i,s,o,g,r,a,m) in meteor page like Apifier)
-        result.isGoogleAnalyticsObject = (typeof ga !== 'undefined') ? true : false;
-        // check for GA function (function(i,s,o,g,r,a,m)) exists in page
-        result.isGoogleAnalyticsFunc = ($("script:contains(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject'])").length) ? true : false;
         // -- Meta charset
         result.isCharacterEncode = ($("meta[charset]")) ? true : false;
         // -- Meta description
