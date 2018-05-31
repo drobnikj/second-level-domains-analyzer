@@ -9,10 +9,16 @@ const { findLinksOnPage } = require('./helpers/misc');
 const DEFAULT_PAGE_TIMEOUT = 180000;
 
 Apify.main(async () => {
-    const { proxyGroups, requestListSources } = await Apify.getValue('INPUT');
+    const { apifyProxyGroups, requestListSources, tld } = await Apify.getValue('INPUT');
 
-    if (!proxyGroups || !requestListSources) {
-        throw new Error('Invalid input, you have to specified proxyGroups and requestListSources');
+    if (!tld || !requestListSources) {
+        throw new Error('Invalid input, you have to specified tld and requestListSources');
+    }
+
+    const launchPuppeteerOptions = {};
+    if (apifyProxyGroups) {
+        launchPuppeteerOptions.useApifyProxy = true;
+        launchPuppeteerOptions.proxyGroups = apifyProxyGroups;
     }
 
     const requestQueue = await Apify.openRequestQueue();
@@ -32,7 +38,7 @@ Apify.main(async () => {
         requestQueue,
         pageOpsTimeoutMillis: DEFAULT_PAGE_TIMEOUT,
         maxConcurrency: (Apify.isAtHome()) ? undefined : 1,
-        launchPuppeteerOptions: { apifyProxyGroups: proxyGroups },
+        launchPuppeteerOptions,
 
         gotoFunction: async ({ request, page }) => {
             const gotoPageResponse = await page.goto(request.url, { timeout: DEFAULT_PAGE_TIMEOUT });
@@ -63,7 +69,7 @@ Apify.main(async () => {
                         nextLinks[link] = 'toAdd';
                     } else {
                         // Different host name
-                        if (spitedHostname.slice(-1)[0] === 'cz') {
+                        if (spitedHostname.slice(-1)[0] === tld) {
                             const domain = spitedHostname.join('.');
                             if (!addedDomains[domain]) domains[domain] = 'toAdd'
                         }
