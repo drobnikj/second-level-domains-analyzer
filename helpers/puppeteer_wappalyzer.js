@@ -34,35 +34,34 @@ module.exports = class PuppeteerWappalyzer extends Wappalyzer {
      * @param wappalyzer
      * @param page
      */
-    async parseJs (page) {
+    async parseJs(page) {
         const patterns = this.jsPatterns;
-        const js = {};
 
-        for (const appName of Object.keys(patterns)) {
-            js[appName] = {};
+        return await page.evaluate(async (patterns) => {
+            const js = {};
+            Object.keys(patterns).forEach(appName => {
+                js[appName] = {};
 
-            for (const chain of Object.keys(patterns[appName])) {
-                js[appName][chain] = {};
+                Object.keys(patterns[appName]).forEach(chain => {
+                    js[appName][chain] = {};
 
-                let index = 0;
-                for (const pattern of patterns[appName][chain]) {
-                    const properties = chain.split('.');
+                    patterns[appName][chain].forEach((pattern, index) => {
+                        const properties = chain.split('.');
 
-                    const value = await page.evaluate((properties) => {
-                        properties.reduce((parent, property) => {
+                        let value = properties.reduce((parent, property) => {
                             return parent && parent.hasOwnProperty(property) ? parent[property] : null;
                         }, window);
-                    }, properties);
 
+                        value = typeof value === 'string' || typeof value === 'number' ? value : !!value;
 
-                    if (value) {
-                        js[appName][chain][index] = value;
-                    }
-                    index++
-                }
-            }
-        }
-        return js;
+                        if (value) {
+                            js[appName][chain][index] = value;
+                        }
+                    });
+                });
+            });
+            return js;
+        }, patterns);
     };
 
     parseHeaders(puppeteerHeaders) {
