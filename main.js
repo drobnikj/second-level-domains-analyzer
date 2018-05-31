@@ -56,7 +56,7 @@ Apify.main(async () => {
 
             // Finds links with on home page
             const homePageLinks = await findLinksOnPage(page);
-            // Find new SLD on page and add them to queue
+            // Finds new SLD on page and add them to queue
             const domains = {};
             const nextLinks = {};
             homePageLinks.map(link => {
