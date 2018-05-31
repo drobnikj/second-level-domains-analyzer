@@ -1,10 +1,10 @@
 const Apify = require('apify');
 const { URL } = require('url');
-const PuppeteerWappalyzer = require('./puppeteer_wappalyzer');
-const basicSEOAnalysis = require('./basic_seo_analysis');
-const { jsonLdLookup, microdataLookup } = require('./ontology_lookups');
-const { dnsLookup, dnsResolve6 } = require('./dns');
-const { findLinksOnPage } = require('./misc');
+const PuppeteerWappalyzer = require('./helpers/puppeteer_wappalyzer');
+const basicSEOAnalysis = require('./helpers/basic_seo_analysis');
+const { jsonLdLookup, microdataLookup } = require('./helpers/ontology_lookups');
+const { dnsLookup, dnsResolve6 } = require('./helpers/dns');
+const { findLinksOnPage } = require('./helpers/misc');
 
 const DEFAULT_PAGE_TIMEOUT = 180000;
 
