@@ -39,7 +39,7 @@ Apify.main(async () => {
         requestList,
         requestQueue,
         pageOpsTimeoutMillis: 2*DEFAULT_PAGE_TIMEOUT,
-        maxConcurrency: (Apify.isAtHome()) ? undefined : 1,
+        // maxConcurrency: (Apify.isAtHome()) ? undefined : 1,
         launchPuppeteerOptions,
 
         gotoFunction: async ({ request, page }) => {

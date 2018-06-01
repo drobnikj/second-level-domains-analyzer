@@ -2,6 +2,10 @@ const Wappalyzer = require('wappalyzer/wappalyzer');
 const appsJson = require('wappalyzer/apps.json');
 
 
+const APPS = appsJson.apps;
+const CATEGORIES = appsJson.categories;
+
+
 /**
  * Class extends Wappalyzer class for using Puppeteer page
  * TODO: Create npm package from this module, we can use it in other Apify projects
@@ -10,8 +14,8 @@ module.exports = class PuppeteerWappalyzer extends Wappalyzer {
     constructor() {
         super();
         this.detectedApps = {};
-        this.apps = appsJson.apps;
-        this.categories = appsJson.categories;
+        this.apps = APPS;
+        this.categories = CATEGORIES;
         this.parseJsPatterns();
         this.driver.log = (message, source, type) => console.log(`Wappalyzer: ${message}`, source, type);
         this.driver.displayApps = (detected) => {
@@ -29,11 +33,6 @@ module.exports = class PuppeteerWappalyzer extends Wappalyzer {
         };
     }
 
-    /**
-     * This method preparses js for Wappalyzer
-     * @param wappalyzer
-     * @param page
-     */
     async parseJs(page) {
         const patterns = this.jsPatterns;
 
@@ -73,11 +72,22 @@ module.exports = class PuppeteerWappalyzer extends Wappalyzer {
     async analyze(pageResponse, page) {
         // Analyse
         const url = page.url();
+        console.time('headers');
         const headers = this.parseHeaders(pageResponse.headers());
+        console.timeEnd('headers');
+        console.time('html');
         const html = await page.evaluate('document.documentElement.outerHTML');
+        console.timeEnd('html');
+        console.time('scripts');
         const scripts = await page.$$eval('script', scripts => scripts.map(script => script.getAttribute('src')));
+        console.timeEnd('scripts');
+        console.time('js');
         const js = await this.parseJs(page);
+        console.timeEnd('js');
+        console.time('cookies');
         const cookies = await page.cookies();
+        console.timeEnd('cookies');
+        console.time('analyze');
         await super.analyze(url, {
             headers,
             html,
@@ -85,7 +95,7 @@ module.exports = class PuppeteerWappalyzer extends Wappalyzer {
             js,
             cookies,
         }, { url });
-
+        console.timeEnd('analyze');
         return Object.values(this.detectedApps);
     }
 };
