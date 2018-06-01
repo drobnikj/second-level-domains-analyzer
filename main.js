@@ -39,7 +39,7 @@ Apify.main(async () => {
         requestList,
         requestQueue,
         pageOpsTimeoutMillis: 2*DEFAULT_PAGE_TIMEOUT,
-        maxConcurrency: (Apify.isAtHome()) ? 5 : 1,
+        maxConcurrency: (Apify.isAtHome()) ? undefined : 1,
         launchPuppeteerOptions,
 
         gotoFunction: async ({ request, page }) => {
@@ -116,7 +116,7 @@ Apify.main(async () => {
             const basicSEO = await basicSEOAnalysis(page);
             console.timeEnd('basicSEO');
 
-            console.time('ontologies')
+            console.time('ontologies');
             // JSON-LD and Microdata lookup
             const { isJsonLd, jsonLdData } = await jsonLdLookup(page);
             const { isMicrodata, microdata } = await microdataLookup(page);
