@@ -1,7 +1,7 @@
 FROM apify/actor-node-puppeteer:beta
 
 # Copy source code
-COPY * ./
+COPY . .
 
 # Install default dependencies, print versions of everything
 RUN npm --quiet set progress=false \
