@@ -4,8 +4,9 @@
 	"description": "Crawl a number of web pages using headless Chrome and Puppeteer",
 	"main": "main.js",
 	"dependencies": {
-		"apify": "^0.5.34",
+		"apify": "^0.5.36",
 		"microdata-node": "^1.0.0",
+		"v8-profiler": "^5.7.0",
 		"wappalyzer": "^5.4.15"
 	},
 	"devDependencies": {},
