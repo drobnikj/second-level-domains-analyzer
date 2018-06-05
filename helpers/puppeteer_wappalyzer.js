@@ -1,7 +1,6 @@
 const Wappalyzer = require('wappalyzer/wappalyzer');
 const appsJson = require('wappalyzer/apps.json');
 
-
 const APPS = appsJson.apps;
 const CATEGORIES = appsJson.categories;
 
@@ -69,33 +68,24 @@ module.exports = class PuppeteerWappalyzer extends Wappalyzer {
         return parsedHeaders;
     };
 
-    async analyze(pageResponse, page) {
+    async analyze(headers, page) {
         // Analyse
         const url = page.url();
-        console.time('headers');
-        const headers = this.parseHeaders(pageResponse.headers());
-        console.timeEnd('headers');
-        console.time('html');
+        console.time(`${url} technologyAnalyser.analyse`);
+        const parsedHeaders = this.parseHeaders(headers);
         const html = await page.evaluate('document.documentElement.outerHTML');
-        console.timeEnd('html');
-        console.time('scripts');
         const scripts = await page.$$eval('script', scripts => scripts.map(script => script.getAttribute('src')));
-        console.timeEnd('scripts');
-        console.time('js');
         const js = await this.parseJs(page);
-        console.timeEnd('js');
-        console.time('cookies');
         const cookies = await page.cookies();
-        console.timeEnd('cookies');
-        console.time('analyze');
         await super.analyze(url, {
-            headers,
+            parsedHeaders,
             html,
             scripts,
             js,
             cookies,
         }, { url });
-        console.timeEnd('analyze');
+
+        console.timeEnd(`${url} technologyAnalyser.analyse`);
         return Object.values(this.detectedApps);
     }
 };
