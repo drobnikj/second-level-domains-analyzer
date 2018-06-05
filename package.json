@@ -7,7 +7,8 @@
 		"apify": "^0.5.36",
 		"microdata-node": "^1.0.0",
 		"v8-profiler": "^5.7.0",
-		"wappalyzer": "^5.4.15"
+		"wappalyzer": "^5.4.15",
+		"webworker-threads": "^0.7.13"
 	},
 	"devDependencies": {},
 	"scripts": {

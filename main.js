@@ -8,7 +8,7 @@ const { findLinksOnPage } = require('./helpers/misc');
 
 // require('./helpers/cpuprofiler').init('./profiles_data');
 
-const DEFAULT_PAGE_TIMEOUT = 60000;
+const DEFAULT_PAGE_TIMEOUT = 120000;
 
 Apify.main(async () => {
     const { apifyProxyGroups, requestListSources, tld } = await Apify.getValue('INPUT');
@@ -38,17 +38,18 @@ Apify.main(async () => {
     const crawler = new Apify.PuppeteerCrawler({
         requestList,
         requestQueue,
-        pageOpsTimeoutMillis: 2*DEFAULT_PAGE_TIMEOUT,
-        // maxConcurrency: (Apify.isAtHome()) ? undefined : 1,
+        pageOpsTimeoutMillis: 3*DEFAULT_PAGE_TIMEOUT,
+        maxConcurrency: (Apify.isAtHome()) ? 20 : 1,
+        // minConcurrency: 20,
         launchPuppeteerOptions,
 
         gotoFunction: async ({ request, page }) => {
-            console.time('goto');
+            console.time(`${request.url} goto`);
             const gotoPageResponse = await page.goto(request.url, { timeout: DEFAULT_PAGE_TIMEOUT });
             request.userData = {
                 gotoPageResponse
             };
-            console.timeEnd('goto');
+            console.timeEnd(`${request.url} goto`);
         },
 
         handlePageFunction: async ({ page, request }) => {
@@ -58,7 +59,7 @@ Apify.main(async () => {
             const homePageTitle = await page.title();
             const homePageUrl = new URL(loadedUrl);
 
-            console.time('homePageLinks');
+            console.time(`${request.url} homePageLinks`);
             // Finds links with on home page
             const homePageLinks = await findLinksOnPage(page);
             // Finds new SLD on page and add them to queue
@@ -84,8 +85,8 @@ Apify.main(async () => {
                     console.log(`Error: Bad links ${link}, ${err.message}`);
                 }
             });
-            console.timeEnd('homePageLinks');
-            console.time('Add domains to queue');
+            console.timeEnd(`${request.url} homePageLinks`);
+            console.time(`${request.url} Add domains to queue`);
             // Add domains to queue
             const foundDomains = [];
             for (const domain of Object.keys(domains)) {
@@ -93,15 +94,21 @@ Apify.main(async () => {
                 if (!addToQueue.wasAlreadyPresent && !addToQueue.wasAlreadyHandled) foundDomains.push(domain);
                 addedDomains[domain] = 'added';
             }
-            console.timeEnd('Add domains to queue');
+            console.timeEnd(`${request.url} Add domains to queue`);
             console.log(`${request.url} - Found domains ${foundDomains.length}`);
 
             const foundNextLinks = Object.keys(nextLinks);
             console.log(`${request.url} - Found next links ${foundNextLinks.length}`);
 
-            console.time('Dns lookup');
+            console.time(`${request.url} Dns lookup`);
             // Dns lookup for server IP and maybe IPv6 support
-            const { address: serverIPv4address } = await dnsLookup(homePageUrl.hostname, { family: 4 });
+            let serverIPv4address;
+            try {
+                const lookup = await dnsLookup(homePageUrl.hostname, { family: 4 });
+                serverIPv4address = lookup.address;
+            } catch (e) {
+                // Show must go on
+            }
             let isIPv6Support = false;
             try {
                 await dnsResolve6(homePageUrl.hostname);
@@ -109,30 +116,30 @@ Apify.main(async () => {
             } catch (e) {
                 // No data for IPv6 lookup
             }
-            console.timeEnd('Dns lookup');
+            console.timeEnd(`${request.url} Dns lookup`);
 
-            console.time('basicSEO');
+            const promises = [];
+
             // Basic SEO analysis
-            const basicSEO = await basicSEOAnalysis(page);
-            console.timeEnd('basicSEO');
+            promises.push(basicSEOAnalysis(page));
 
-            console.time('ontologies');
             // JSON-LD and Microdata lookup
-            const { isJsonLd, jsonLdData } = await jsonLdLookup(page);
-            const { isMicrodata, microdata } = await microdataLookup(page);
-            console.timeEnd('ontologies');
+            promises.push(jsonLdLookup(page));
+            promises.push(microdataLookup(page));
 
-            console.time('technologyAnalyser');
             // Page technologies analysis
+            const headers = await gotoPageResponse.headers();
             const technologyAnalyser = new PuppeteerWappalyzer();
-            const technologyLookupResults = await technologyAnalyser.analyze(gotoPageResponse, page);
-            console.timeEnd('technologyAnalyser');
+            promises.push(technologyAnalyser.analyze(headers, page));
 
-            console.time('pushData');
+            const [basicSEO, { isJsonLd, jsonLdData }, { isMicrodata, microdata }, technologyLookupResults] = await Promise.all(promises);
+
+            console.time(`${request.url} pushData`);
             await Apify.pushData({
                 url: request.url,
                 isOpen: true,
                 loadedUrl,
+                statusCode: await gotoPageResponse.status(),
                 domain: homePageUrl.hostname.split('.').slice(-2).join('.'),
                 protocol: homePageUrl.protocol,
                 title: homePageTitle,
@@ -148,7 +155,7 @@ Apify.main(async () => {
                 isMicrodata,
                 microdata,
             });
-            console.timeEnd('pushData');
+            console.timeEnd(`${request.url} pushData`);
 
             console.log(`Finish analysis for ${request.url}`);
         },
