@@ -20,7 +20,7 @@ Apify.main(async () => {
     const launchPuppeteerOptions = {};
     if (apifyProxyGroups) {
         launchPuppeteerOptions.useApifyProxy = true;
-        launchPuppeteerOptions.proxyGroups = apifyProxyGroups;
+        launchPuppeteerOptions.apifyProxyGroups = apifyProxyGroups;
     }
 
     const requestQueue = await Apify.openRequestQueue();
@@ -39,7 +39,7 @@ Apify.main(async () => {
         requestList,
         requestQueue,
         pageOpsTimeoutMillis: 3*DEFAULT_PAGE_TIMEOUT,
-        maxConcurrency: (Apify.isAtHome()) ? 20 : 1,
+        // maxConcurrency: (Apify.isAtHome()) ? 20 : 1,
         // minConcurrency: 20,
         launchPuppeteerOptions,
 
