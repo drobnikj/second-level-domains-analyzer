@@ -39,7 +39,7 @@ function startProfiling() {
     // Schedule stop of profiling in x seconds
     setTimeout(function () {
         stopProfiling(id)
-    }, 5000);
+    }, 30000);
 }
 
 /**
@@ -48,7 +48,7 @@ function startProfiling() {
  */
 function stopProfiling(id) {
     var profile = profiler.stopProfiling(id);
-    Apify.setValue(id + '.cpuprofile', profile).then(() => {
+    Apify.setValue(id + '.cpuprofile', JSON.stringify(profile), { contentType: 'text/plain' }).then(() => {
         console.log('Profiler data written');
     });
     // fs.writeFile(_datadir + '/' + id + '.cpuprofile', JSON.stringify(profile), function () {

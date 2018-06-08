@@ -1,7 +1,8 @@
 const Wappalyzer = require('wappalyzer/wappalyzer');
 const appsJson = require('wappalyzer/apps.json');
+const customAppsJson = require('./custom_apps.json');
 
-const APPS = appsJson.apps;
+const APPS = customAppsJson;
 const CATEGORIES = appsJson.categories;
 
 

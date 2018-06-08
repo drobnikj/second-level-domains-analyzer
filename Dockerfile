@@ -1,4 +1,8 @@
-FROM apify/actor-node-puppeteer:beta
+FROM apify/actor-node-chrome
+
+RUN apk add --no-cache --virtual .build-deps make gcc g++ python \
+ && npm install --production --silent \
+ && apk del .build-deps
 
 # Copy source code
 COPY . .

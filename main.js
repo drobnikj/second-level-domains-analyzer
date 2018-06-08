@@ -7,6 +7,7 @@ const { dnsLookup, dnsResolve6 } = require('./helpers/dns');
 const { findLinksOnPage } = require('./helpers/misc');
 
 // require('./helpers/cpuprofiler').init('./profiles_data');
+require('./helpers').init('./dump_data');
 
 const DEFAULT_PAGE_TIMEOUT = 120000;
 
@@ -39,7 +40,7 @@ Apify.main(async () => {
         requestList,
         requestQueue,
         pageOpsTimeoutMillis: 3*DEFAULT_PAGE_TIMEOUT,
-        // maxConcurrency: (Apify.isAtHome()) ? 20 : 1,
+        maxConcurrency: (Apify.isAtHome()) ? 20 : 1,
         // minConcurrency: 20,
         launchPuppeteerOptions,
 
