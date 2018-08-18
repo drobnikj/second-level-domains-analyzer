@@ -59,13 +59,13 @@ Apify.main(async () => {
         },
 
         handlePageFunction: async ({ page, request }) => {
+            console.time(`${request.url} analysis`);
             const loadedUrl = page.url();
             console.log(`Start analysis url: ${request.url}, loadedUrl: ${loadedUrl}`);
             const { gotoPageResponse } = request.userData;
             const homePageTitle = await page.title();
             const homePageUrl = new URL(loadedUrl);
 
-            console.time(`${request.url} homePageLinks`);
             // Finds links with on home page
             const homePageLinks = await findLinksOnPage(page);
             // Finds new SLD on page and add them to queue
@@ -91,8 +91,6 @@ Apify.main(async () => {
                     console.log(`Error: Bad links ${link}, ${err.message}`);
                 }
             });
-            console.timeEnd(`${request.url} homePageLinks`);
-            console.time(`${request.url} Add domains to queue`);
             // Add domains to queue
             const foundDomains = [];
             for (const domain of Object.keys(domains)) {
@@ -100,13 +98,11 @@ Apify.main(async () => {
                 if (!addToQueue.wasAlreadyPresent && !addToQueue.wasAlreadyHandled) foundDomains.push(domain);
                 addedDomains[domain] = 'added';
             }
-            console.timeEnd(`${request.url} Add domains to queue`);
             console.log(`${request.url} - Found domains ${foundDomains.length}`);
 
             const foundNextLinks = Object.keys(nextLinks);
             console.log(`${request.url} - Found next links ${foundNextLinks.length}`);
 
-            console.time(`${request.url} Dns lookup`);
             // Dns lookup for server IP and maybe IPv6 support
             let serverIPv4address;
             try {
@@ -122,8 +118,6 @@ Apify.main(async () => {
             } catch (e) {
                 // No data for IPv6 lookup
             }
-            console.timeEnd(`${request.url} Dns lookup`);
-
             const promises = [];
 
             // Basic SEO analysis
@@ -140,7 +134,6 @@ Apify.main(async () => {
 
             const [basicSEO, { isJsonLd, jsonLdData }, { isMicrodata, microdata }, technologyLookupResults] = await Promise.all(promises);
 
-            console.time(`${request.url} pushData`);
             await Apify.pushData({
                 url: request.url,
                 isOpen: true,
@@ -161,8 +154,7 @@ Apify.main(async () => {
                 isMicrodata,
                 microdata,
             });
-            console.timeEnd(`${request.url} pushData`);
-
+            console.timeEnd(`${request.url} analysis`);
             console.log(`Finish analysis for ${request.url}`);
         },
 

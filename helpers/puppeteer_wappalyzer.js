@@ -75,7 +75,7 @@ module.exports = class PuppeteerWappalyzer extends Wappalyzer {
     async analyze(headers, page) {
         // Analyse
         const url = page.url();
-        console.time(`${url} technologyAnalyser.analyse`);
+        // console.time(`${url} technologyAnalyser.analyse`);
         const parsedHeaders = this.parseHeaders(headers);
         const html = await page.evaluate('document.documentElement.outerHTML');
         const scripts = await page.$$eval('script', scripts => scripts.map(script => script.getAttribute('src')));
@@ -89,7 +89,7 @@ module.exports = class PuppeteerWappalyzer extends Wappalyzer {
             cookies,
         }, { url });
 
-        console.timeEnd(`${url} technologyAnalyser.analyse`);
+        // console.timeEnd(`${url} technologyAnalyser.analyse`);
         return Object.values(this.detectedApps);
     }
 };

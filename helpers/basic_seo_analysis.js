@@ -7,8 +7,8 @@ const Apify = require('apify');
  * @return {Promise<void>}
  */
 module.exports = async (page) => {
-    const url = page.url();
-    console.time(`${url} basicSEO`);
+    // const url = page.url();
+    // console.time(`${url} basicSEO`);
     await Apify.utils.puppeteer.injectJQuery(page);
     const analysis = await page.evaluate(() => {
         const result = {};
@@ -58,6 +58,6 @@ module.exports = async (page) => {
         result.isIframe = ($('iframe').length) ? true : false;
         return result;
     });
-    console.timeEnd(`${url} basicSEO`);
+    // console.timeEnd(`${url} basicSEO`);
     return analysis;
 };
