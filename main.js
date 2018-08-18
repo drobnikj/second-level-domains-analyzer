@@ -6,12 +6,10 @@ const { jsonLdLookup, microdataLookup } = require('./helpers/ontology_lookups');
 const { dnsLookup, dnsResolve6 } = require('./helpers/dns');
 const { findLinksOnPage } = require('./helpers/misc');
 
-// require('./helpers/cpuprofiler').init('./profiles_data');
-require('./helpers').init('./dump_data');
-
 const DEFAULT_PAGE_TIMEOUT = 120000;
 
 Apify.main(async () => {
+
     const { apifyProxyGroups, requestListSources, tld } = await Apify.getValue('INPUT');
 
     if (!tld || !requestListSources) {
@@ -40,12 +38,19 @@ Apify.main(async () => {
         requestList,
         requestQueue,
         pageOpsTimeoutMillis: 3*DEFAULT_PAGE_TIMEOUT,
-        maxConcurrency: (Apify.isAtHome()) ? 20 : 1,
-        // minConcurrency: 20,
+        minConcurrency: (Apify.isAtHome()) ? 40 : 1,
         launchPuppeteerOptions,
 
         gotoFunction: async ({ request, page }) => {
             console.time(`${request.url} goto`);
+            await page.setRequestInterception(true);
+            page.on('request', interceptedRequest => {
+                if (['image', 'media', 'font'].includes(interceptedRequest.resourceType())) {
+                    interceptedRequest.abort();
+                } else {
+                    interceptedRequest.continue();
+                }
+            });
             const gotoPageResponse = await page.goto(request.url, { timeout: DEFAULT_PAGE_TIMEOUT });
             request.userData = {
                 gotoPageResponse

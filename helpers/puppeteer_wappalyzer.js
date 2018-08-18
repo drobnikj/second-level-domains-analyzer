@@ -1,9 +1,9 @@
 const Wappalyzer = require('wappalyzer/wappalyzer');
-const appsJson = require('wappalyzer/apps.json');
-const customAppsJson = require('./custom_apps.json');
+const fs = require('fs')
+const path = require('path')
 
-const APPS = customAppsJson;
-const CATEGORIES = appsJson.categories;
+const APPS = JSON.parse(fs.readFileSync(path.join(__dirname, './custom_apps.json')));
+const CATEGORIES = JSON.parse(fs.readFileSync(path.join(__dirname, './apps.json'))).categories;
 
 
 /**

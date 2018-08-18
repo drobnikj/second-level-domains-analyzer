@@ -1,8 +1,4 @@
-FROM apify/actor-node-chrome
-
-RUN apk add --no-cache --virtual .build-deps make gcc g++ python \
- && npm install --production --silent \
- && apk del .build-deps
+FROM apify/actor-node-chrome:beta
 
 # Copy source code
 COPY . .
