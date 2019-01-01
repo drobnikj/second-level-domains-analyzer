@@ -37,8 +37,7 @@ Apify.main(async () => {
     const crawler = new Apify.PuppeteerCrawler({
         requestList,
         requestQueue,
-        pageOpsTimeoutMillis: 3*DEFAULT_PAGE_TIMEOUT,
-        minConcurrency: (Apify.isAtHome()) ? 40 : 1,
+        pageOpsTimeoutMillis: 3 * DEFAULT_PAGE_TIMEOUT,
         launchPuppeteerOptions,
 
         gotoFunction: async ({ request, page }) => {
@@ -53,7 +52,8 @@ Apify.main(async () => {
             });
             const gotoPageResponse = await page.goto(request.url, { timeout: DEFAULT_PAGE_TIMEOUT });
             request.userData = {
-                gotoPageResponse
+                statusCode: await gotoPageResponse.status(),
+                headers: await gotoPageResponse.headers(),
             };
             console.timeEnd(`${request.url} goto`);
         },
@@ -62,7 +62,7 @@ Apify.main(async () => {
             console.time(`${request.url} analysis`);
             const loadedUrl = page.url();
             console.log(`Start analysis url: ${request.url}, loadedUrl: ${loadedUrl}`);
-            const { gotoPageResponse } = request.userData;
+            const { statusCode, headers } = request.userData;
             const homePageTitle = await page.title();
             const homePageUrl = new URL(loadedUrl);
 
@@ -128,7 +128,6 @@ Apify.main(async () => {
             promises.push(microdataLookup(page));
 
             // Page technologies analysis
-            const headers = await gotoPageResponse.headers();
             const technologyAnalyser = new PuppeteerWappalyzer();
             promises.push(technologyAnalyser.analyze(headers, page));
 
@@ -138,7 +137,7 @@ Apify.main(async () => {
                 url: request.url,
                 isOpen: true,
                 loadedUrl,
-                statusCode: await gotoPageResponse.status(),
+                statusCode,
                 domain: homePageUrl.hostname.split('.').slice(-2).join('.'),
                 protocol: homePageUrl.protocol,
                 title: homePageTitle,
@@ -172,4 +171,3 @@ Apify.main(async () => {
     // Run crawler.
     await crawler.run();
 });
-
