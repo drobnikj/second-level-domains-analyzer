@@ -1,0 +1,25 @@
+{
+  "title": "Second level domains analyzer",
+  "description": "This crawler scrapes all second level domain and returns useful data about each domain.",
+  "type": "object",
+  "schemaVersion": 1,
+  "properties": {
+    "requestListSources": {
+      "title": "Domains sources",
+      "type": "array",
+      "description": "List of domain used as request list sources.",
+      "prefill": [],
+      "editor": "requestListSources"
+    },
+    "proxyConfig": {
+      "title": "Proxy configuration",
+      "type": "object",
+      "description": "Use Apify Proxy, you need to have some proxy group to get results on Google.",
+      "prefill": { "useApifyProxy": false },
+      "editor": "proxy"
+    }
+  },
+  "required": [
+    "searchString"
+  ]
+}
